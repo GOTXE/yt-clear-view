@@ -271,7 +271,9 @@ class Carousel {
     const video = item.video || {};
     const channel = item.channel || {};
     const watched = Boolean(item.watched);
-    const isShort = typeof video.duration === 'number' && video.duration <= 60;
+    // Keep in sync with backend Config.SHORTS_MAX_DURATION_SECONDS (YouTube's
+    // Shorts cap has been 3 minutes since 2024-10-15, not 60s).
+    const isShort = typeof video.duration === 'number' && video.duration <= 180;
     const isPhoneMode = document.documentElement.dataset.mode === 'phone';
     const showTitle = this.options.showTitle && !(this.options.hideTextForShorts && isShort);
     const showDescription = this.options.showDescription && !(this.options.hideTextForShorts && isShort) && !isPhoneMode;

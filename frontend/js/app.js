@@ -115,7 +115,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     prefetchedThumbnails: new Set(),
     filters: {
       unwatched: false,
-      month: false
+      month: false,
+      hideShorts: false
     },
     carousels: [],
     searchActive: false,
@@ -273,6 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchInput: document.getElementById('search-input'),
     filterUnwatched: document.getElementById('filter-unwatched'),
     filterMonth: document.getElementById('filter-month'),
+    filterHideShorts: document.getElementById('filter-hide-shorts'),
     githubLabel: document.getElementById('github-label'),
     footerUpdateLink: document.getElementById('footer-update-link'),
     sessionInfo: document.querySelector('.session-info'),
@@ -611,6 +613,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (ui.filterMonth) {
       ui.filterMonth.textContent = t('lastMonth');
+    }
+    if (ui.filterHideShorts) {
+      ui.filterHideShorts.textContent = t('hideShorts');
+      ui.filterHideShorts.title = t('hideShortsHint');
     }
     if (ui.filterPanelClear) {
       ui.filterPanelClear.textContent = t('clear');
@@ -1490,9 +1496,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function renderPrimaryLoadingStates() {
     renderSectionLoadingState(ui.latestCarousel, 'loadingVideos');
-    if (ui.shortsSection) {
-      ui.shortsSection.hidden = false;
-    }
+    updateShortsSectionVisibility();
     renderSectionLoadingState(ui.shortsCarousel, 'loadingShorts');
     if (ui.olderSection) {
       ui.olderSection.hidden = false;
@@ -1993,6 +1997,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return false;
       }
 
+      if (state.filters.hideShorts) {
+        const duration = item.video && item.video.duration;
+        // Keep in sync with backend Config.SHORTS_MAX_DURATION_SECONDS.
+        if (typeof duration === 'number' && duration <= 180) {
+          return false;
+        }
+      }
+
       if (state.selectedChannelId !== null || state.selectedChannelYtId) {
         const channelId = item.channel && item.channel.id
           ? item.channel.id
@@ -2133,8 +2145,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.carousels.push(carousel);
   }
 
+  function updateShortsSectionVisibility() {
+    if (ui.shortsSection) {
+      ui.shortsSection.hidden = state.filters.hideShorts;
+    }
+  }
+
   async function renderShortsCarousel() {
     if (!ui.shortsCarousel) {
+      return;
+    }
+
+    updateShortsSectionVisibility();
+    if (state.filters.hideShorts) {
+      // "Ocultar Shorts" is on: skip the fetch entirely and leave the
+      // section hidden and empty instead of just hiding it visually.
+      ui.shortsCarousel.innerHTML = '';
       return;
     }
 
@@ -2177,6 +2203,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         randomize: true,
         only_unwatched: state.selectedChannelId === null && !state.selectedChannelYtId
       };
+      if (state.filters.hideShorts) {
+        // Ask the backend to exclude Shorts from this otherwise-mixed
+        // "older" bucket instead of just hiding the dedicated Shorts carousel.
+        params.content_type = 'video';
+      }
       if (state.selectedChannelId !== null) {
         params.channel_id = state.selectedChannelId;
       }
@@ -2205,6 +2236,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let totalCount = 0;
     const carousel = new window.Carousel('watched-carousel', async (offset, limit) => {
       const params = {};
+      if (state.filters.hideShorts) {
+        params.content_type = 'video';
+      }
       if (state.selectedChannelId !== null) {
         params.channel_id = state.selectedChannelId;
       }
@@ -2863,9 +2897,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.initialContentReady = true;
 
     deferredTask(async () => {
-      if (ui.shortsSection) {
-        ui.shortsSection.hidden = false;
-      }
       await renderShortsCarousel();
 
       if (ui.olderSection) {
@@ -3051,6 +3082,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.filterMonth.classList.toggle('is-active', state.filters.month);
         ui.filterMonth.setAttribute('aria-pressed', state.filters.month ? 'true' : 'false');
       }
+      if (ui.filterHideShorts) {
+        ui.filterHideShorts.classList.toggle('is-active', state.filters.hideShorts);
+        ui.filterHideShorts.setAttribute('aria-pressed', state.filters.hideShorts ? 'true' : 'false');
+      }
     };
 
     const applyFiltersNow = () => {
@@ -3082,6 +3117,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           state.filters.unwatched = false;
         }
         updateButtons();
+        applyFiltersNow();
+      });
+    }
+
+    if (ui.filterHideShorts) {
+      ui.filterHideShorts.addEventListener('click', () => {
+        state.filters.hideShorts = !state.filters.hideShorts;
+        updateButtons();
+        updateShortsSectionVisibility();
         applyFiltersNow();
       });
     }
@@ -3427,6 +3471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ui.filterPanelClear.addEventListener('click', () => {
         state.filters.unwatched = false;
         state.filters.month = false;
+        state.filters.hideShorts = false;
         if (ui.filterUnwatched) {
           ui.filterUnwatched.classList.remove('is-active');
           ui.filterUnwatched.setAttribute('aria-pressed', 'false');
@@ -3434,6 +3479,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (ui.filterMonth) {
           ui.filterMonth.classList.remove('is-active');
           ui.filterMonth.setAttribute('aria-pressed', 'false');
+        }
+        if (ui.filterHideShorts) {
+          ui.filterHideShorts.classList.remove('is-active');
+          ui.filterHideShorts.setAttribute('aria-pressed', 'false');
         }
         clearSearch();
       });

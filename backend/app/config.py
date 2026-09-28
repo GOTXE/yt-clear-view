@@ -44,6 +44,11 @@ class Config:
     SQLITE_METRICS_ENABLED = os.getenv("SQLITE_METRICS_ENABLED", "false").lower() == "true"
     SQLITE_METRICS_SLOW_WRITE_MS = int(os.getenv("SQLITE_METRICS_SLOW_WRITE_MS", "100"))
 
+    # YouTube raised the Shorts length cap from 60s to 3 minutes on 2024-10-15
+    # (videos uploaded before that date keep their original classification).
+    # See https://support.google.com/youtube/answer/15424877
+    SHORTS_MAX_DURATION_SECONDS = int(os.getenv("SHORTS_MAX_DURATION_SECONDS", "180"))
+
     GUNICORN_WORKERS = int(os.getenv("GUNICORN_WORKERS", "2"))
 
     YT_DAILY_QUOTA = int(os.getenv("YT_DAILY_QUOTA", "10000"))

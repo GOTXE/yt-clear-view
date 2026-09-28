@@ -26,6 +26,8 @@
   "clearChannelSearch": "Clear channel search",
   "unwatched": "Unwatched",
   "lastMonth": "Last month",
+  "hideShorts": "Hide Shorts",
+  "hideShortsHint": "Hides Shorts everywhere, including older videos",
   "refresh": "Refresh videos",
   "continueWatching": "Continue watching",
   "showContinueWatching": "Show continue watching",
