@@ -263,6 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateAvailableBanner: document.getElementById('update-available-banner'),
     lastUpdatedLabel: document.getElementById('last-updated'),
     channelList: document.getElementById('channel-list'),
+    channelCategoryLegend: document.getElementById('channel-category-legend'),
     channelCount: document.getElementById('channel-count'),
     channelSearchLabel: document.getElementById('channel-search-label'),
     channelSearchInput: document.getElementById('channel-search-input'),
@@ -1547,6 +1548,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     return configuredBase ? `${configuredBase}${media.url}` : media.url;
   }
 
+  // Small inline icons for the header KPI metrics. Kept as plain SVG strings
+  // (stroke="currentColor") so each one picks up the per-metric color set in
+  // main.css via `.header-context__metric[data-metric-key="..."]`, matching
+  // the palette already used by mode-tv.css for the same four metrics.
+  const HEADER_METRIC_ICONS = {
+    subscriptions: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    unwatched: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>',
+    recent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    updated: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>',
+    unclassified: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>'
+  };
+
+  function appendHeaderMetricIcon(title, key) {
+    const markup = HEADER_METRIC_ICONS[key];
+    if (!markup) {
+      return;
+    }
+    const icon = document.createElement('span');
+    icon.className = 'header-context__metric-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = markup;
+    title.insertBefore(icon, title.firstChild);
+  }
+
   function updateHeaderContext() {
     if (!ui.headerContext || typeof window.buildHeaderContext !== 'function') {
       return;
@@ -1573,16 +1598,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (ui.headerContextMetrics) {
         ui.headerContextMetrics.innerHTML = '';
         [
-          { label: t('headerMetricSubscriptions'), value: String(channelsInCategory.length) },
+          { key: 'subscriptions', label: t('headerMetricSubscriptions'), value: String(channelsInCategory.length) },
           {
+            key: 'unwatched',
             label: t('headerMetricUnwatched'),
             value: String(channelsInCategory.reduce((sum, channel) => sum + Number(channel.unwatched_total || 0), 0))
           },
           {
+            key: 'recent',
             label: t('headerMetricRecent'),
             value: String(channelsInCategory.reduce((sum, channel) => sum + Number(channel.recent_total_30 || 0), 0))
           },
           {
+            key: 'updated',
             label: t('headerMetricUpdated'),
             value: latest && typeof window.timeAgo === 'function'
               ? window.timeAgo(latest.toISOString())
@@ -1593,8 +1621,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         ].forEach(metric => {
           const wrapper = document.createElement('div');
           wrapper.className = 'header-context__metric';
+          if (metric && metric.key) {
+            wrapper.dataset.metricKey = metric.key;
+          }
           const title = document.createElement('dt');
           title.textContent = metric.label || '';
+          appendHeaderMetricIcon(title, metric.key);
           const value = document.createElement('dd');
           value.textContent = metric.value || '';
           wrapper.appendChild(title);
@@ -1639,6 +1671,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const title = document.createElement('dt');
         title.textContent = metric.label || '';
+        appendHeaderMetricIcon(title, metric && metric.key);
 
         const value = document.createElement('dd');
         let metricValue = metric.value || '';
@@ -2184,7 +2217,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, {
       showTitle: false,
       showDescription: false,
-      preserveContentOnInit: true
+      preserveContentOnInit: true,
+      shortsLayout: true
     });
 
     await carousel.init();
@@ -2312,6 +2346,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateOptionalCarouselButtons();
   }
 
+  // Small colored chip row above the channel list showing which automatic
+  // categories are actually in use, so the per-channel color dots are
+  // legible at a glance instead of only on hover (badge titles).
+  function renderChannelCategoryLegend(channels) {
+    if (!ui.channelCategoryLegend) {
+      return;
+    }
+
+    const byId = new Map();
+    (channels || []).forEach(channel => {
+      const category = channel.category && channel.category.category;
+      if (!category || category.id == null) {
+        return;
+      }
+      if (!byId.has(category.id)) {
+        byId.set(category.id, category);
+      }
+    });
+
+    ui.channelCategoryLegend.innerHTML = '';
+
+    if (!byId.size || typeof window.CategorySelector !== 'function') {
+      ui.channelCategoryLegend.hidden = true;
+      return;
+    }
+
+    const selector = new window.CategorySelector(null, null);
+    const entries = Array.from(byId.values()).sort((a, b) => {
+      const nameA = a.display_name_es || a.name || '';
+      const nameB = b.display_name_es || b.name || '';
+      return nameA.localeCompare(nameB);
+    });
+
+    entries.forEach(category => {
+      const chip = document.createElement('span');
+      chip.className = `channel-category-legend__item category-badge ${selector.getCategoryColorClass(category.name)}`;
+      chip.setAttribute('role', 'listitem');
+      chip.title = category.display_name_es || category.name;
+      chip.innerHTML = `
+        <span class="category-badge__icon">${category.icon || ''}</span>
+        <span class="channel-category-legend__label">${category.display_name_es || category.name || ''}</span>
+      `;
+      ui.channelCategoryLegend.appendChild(chip);
+    });
+
+    ui.channelCategoryLegend.hidden = false;
+  }
+
   function renderChannelList(channels) {
     if (!ui.channelList) {
       return;
@@ -2319,6 +2401,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     ui.channelList.innerHTML = '';
     syncChannelSearchUI();
+    renderChannelCategoryLegend(channels);
 
     const allItem = document.createElement('div');
     allItem.className = 'channel-item';

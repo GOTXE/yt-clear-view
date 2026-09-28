@@ -279,7 +279,7 @@ class Carousel {
     const showDescription = this.options.showDescription && !(this.options.hideTextForShorts && isShort) && !isPhoneMode;
 
     const card = document.createElement('article');
-    card.className = 'video-card';
+    card.className = this.options.shortsLayout ? 'video-card video-card--vertical' : 'video-card';
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
     if (video.id != null) {
@@ -552,6 +552,22 @@ class Carousel {
     const body = document.body;
     if (!body) {
       return 3;
+    }
+
+    // Shorts are vertical (9:16), so their cards are narrower than regular
+    // 16:9 cards — fit more of them per row for a shelf that reads like
+    // YouTube's own Shorts row instead of stretched-out video cards.
+    if (this.options.shortsLayout) {
+      if (body.classList.contains('device-tv')) {
+        return 8;
+      }
+      if (body.classList.contains('device-tablet')) {
+        return 5;
+      }
+      if (body.classList.contains('device-mobile')) {
+        return 3;
+      }
+      return 6;
     }
 
     if (body.classList.contains('device-tv')) {

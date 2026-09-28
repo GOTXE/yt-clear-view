@@ -424,6 +424,46 @@ select {
   text-align: center;
 }
 
+/* KPI icons for the header metrics (subscriptions/unwatched/updated/
+   unclassified, plus "recent" when a category is selected). Reuses the same
+   per-metric palette mode-tv.css already applies by nth-child, keyed here by
+   data-metric-key so desktop/tablet/phone read consistently with TV mode. */
+.header-context__metric-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: -3px;
+  color: var(--muted);
+}
+
+.header-context__metric-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.header-context__metric[data-metric-key="subscriptions"] .header-context__metric-icon,
+.header-context__metric[data-metric-key="subscriptions"] dd {
+  color: #4fc3f7;
+}
+
+.header-context__metric[data-metric-key="unwatched"] .header-context__metric-icon,
+.header-context__metric[data-metric-key="unwatched"] dd {
+  color: #ffb74d;
+}
+
+.header-context__metric[data-metric-key="updated"] .header-context__metric-icon {
+  color: #8888aa;
+}
+
+.header-context__metric[data-metric-key="unclassified"] .header-context__metric-icon,
+.header-context__metric[data-metric-key="unclassified"] dd {
+  color: #ef5350;
+}
+
 .header-status {
   min-height: 42px;
   display: flex;
@@ -952,6 +992,39 @@ select {
 
 #subscriptions-title {
   font-size: clamp(1.15rem, 1.6vw, 1.45rem);
+}
+
+/* Legend of the automatic categories actually present among the user's
+   channels, so the colored dots on each channel row (.category-badge) are
+   legible at a glance rather than only via hover tooltip. */
+.channel-category-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 2px 0 var(--space-2);
+}
+
+.channel-category-legend[hidden] {
+  display: none;
+}
+
+.channel-category-legend__item.category-badge {
+  width: auto;
+  height: auto;
+  border-radius: 100px;
+  padding: 3px 8px 3px 6px;
+  gap: 5px;
+  cursor: default;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.channel-category-legend__item.category-badge:hover {
+  transform: none;
+}
+
+.channel-category-legend__label {
+  white-space: nowrap;
 }
 
 .channel-list {
@@ -1518,6 +1591,15 @@ select {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Shorts are vertical (9:16) source video, so cropping them into the same
+   16:9 box as regular uploads left a heavily zoomed, inconsistent-looking
+   slice. Give the Shorts shelf its own vertical thumbnail ratio instead —
+   narrower cards, full-height crop — so it reads as an intentional row
+   (closer to YouTube's own Shorts shelf) rather than a broken video grid. */
+.video-card--vertical .video-card__thumb {
+  aspect-ratio: 9 / 16;
 }
 
 .video-card__body {
@@ -3984,6 +4066,103 @@ body.login-page-open #app .app-footer {
     0 0 10px rgba(255, 255, 255, 0.5),
     0 0 22px rgba(147, 197, 253, 0.58),
     0 0 46px rgba(59, 130, 246, 0.4);
+}
+
+.login-page__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2rem, 4vw, 3.25rem);
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .login-page__body {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* Product pitch shown beside the login card on wide viewports only — on
+   phone/tablet the card alone (as before) keeps the flow short. Hidden on
+   the Gestor admin surface, which stays a minimal, admin-focused login. */
+.login-page__pitch {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .login-page__pitch {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 400px;
+    color: rgba(226, 232, 240, 0.92);
+  }
+}
+
+.gestor-body .login-page__pitch {
+  display: none !important;
+}
+
+.login-page__pitch-eyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+
+.login-page__pitch-title {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: clamp(1.7rem, 2.4vw, 2.3rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #ffffff;
+}
+
+.login-page__pitch-lead {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.login-page__pitch-features {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.login-page__pitch-features li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.95rem;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.login-page__pitch-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #7dd3fc;
+  background: color-mix(in srgb, #3b82f6 18%, transparent);
+  border: 1px solid color-mix(in srgb, #60a5fa 45%, transparent);
+}
+
+.login-page__pitch-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .login-page__card {
