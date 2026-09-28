@@ -1,4 +1,13 @@
 :8080 {
+  # Access log to stdout (JSON) so `docker logs` / Synology Container
+  # Manager's log viewer shows every request, including which Cache-Control
+  # a given file was served with — useful to confirm a deploy actually
+  # reached the browser instead of guessing from DevTools alone.
+  log {
+    output stdout
+    format json
+  }
+
   root * /srv
   encode zstd gzip
 
