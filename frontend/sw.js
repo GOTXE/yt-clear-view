@@ -1,5 +1,5 @@
 // Service worker para YT Clear View — estrategia cache-first para assets estáticos.
-const CACHE_VERSION = 'ytcv-v169';
+const CACHE_VERSION = 'ytcv-v170';
 const STATIC_EXTENSIONS = ['.js', '.css', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.woff', '.woff2', '.json'];
 
 // Recursos precacheados en la instalación
