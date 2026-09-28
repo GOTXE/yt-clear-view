@@ -4,12 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="YT Clear View administration panel.">
-    <meta name="theme-color" content="#f1f5f9">
+    <meta name="theme-color" content="#0a0e1a">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="manifest" href="/manifest.json">
     <script>
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.documentElement.classList.add('auth-pending');
+      (function () {
+        // Match the main app's theme instead of always forcing light,
+        // so Gestor looks like part of the same product.
+        try {
+          var storedTheme = localStorage.getItem('ytcv_theme');
+          var theme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : 'dark';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (error) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+        document.documentElement.classList.add('auth-pending');
+      })();
     </script>
     <title>YTCV Gestor</title>
     <link rel="stylesheet" href="/css/main.css">
@@ -20,7 +30,7 @@
         <p class="startup-scrim__brand">Gestor YT Clear View</p>
       </div>
     </div>
-    <div id="app" class="app" data-theme="light" data-app-view="admin">
+    <div id="app" class="app" data-theme="dark" data-app-view="admin">
       <div class="admin-auth-bridge" hidden aria-hidden="true">
         <p class="caption session-info">
           <a id="current-user" class="session-info__label" href="#">Not signed in</a>

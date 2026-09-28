@@ -32,7 +32,7 @@ def _is_short(duration):
     if duration is None:
         return False
     try:
-        return int(duration) <= 60
+        return int(duration) <= Config.SHORTS_MAX_DURATION_SECONDS
     except (TypeError, ValueError):
         return False
 
@@ -388,9 +388,9 @@ def _range_counts(channel_id, start, end, is_short):
     if end:
         query = query.filter(Video.published_at.isnot(None), Video.published_at < end)
     if is_short:
-        query = query.filter(Video.duration <= 60)
+        query = query.filter(Video.duration <= Config.SHORTS_MAX_DURATION_SECONDS)
     else:
-        query = query.filter(or_(Video.duration.is_(None), Video.duration > 60))
+        query = query.filter(or_(Video.duration.is_(None), Video.duration > Config.SHORTS_MAX_DURATION_SECONDS))
     return query.count()
 
 
@@ -403,9 +403,9 @@ def _prune_range(channel_id, start, end, is_short, cap):
     if end:
         query = query.filter(Video.published_at.isnot(None), Video.published_at < end)
     if is_short:
-        query = query.filter(Video.duration <= 60)
+        query = query.filter(Video.duration <= Config.SHORTS_MAX_DURATION_SECONDS)
     else:
-        query = query.filter(or_(Video.duration.is_(None), Video.duration > 60))
+        query = query.filter(or_(Video.duration.is_(None), Video.duration > Config.SHORTS_MAX_DURATION_SECONDS))
 
     items = query.order_by(Video.published_at.desc()).all()
     for video in items[cap:]:

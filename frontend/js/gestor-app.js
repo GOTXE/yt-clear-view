@@ -96,11 +96,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     ui.status.dataset.type = message ? type : '';
   }
 
-  function enforceLightTheme() {
-    document.documentElement.setAttribute('data-theme', 'light');
+  function applyStoredTheme() {
+    // Gestor used to always force light mode, which made it look like a
+    // different product from the main dark app. Match whatever theme the
+    // user last chose instead (same storage key as theme-switcher.js).
+    let theme = 'dark';
+    try {
+      const stored = localStorage.getItem('ytcv_theme');
+      if (stored === 'dark' || stored === 'light') {
+        theme = stored;
+      }
+    } catch (error) {
+      // localStorage unavailable (private mode, etc.) - keep the dark default.
+    }
+    document.documentElement.setAttribute('data-theme', theme);
     const appRoot = document.getElementById('app');
     if (appRoot) {
-      appRoot.setAttribute('data-theme', 'light');
+      appRoot.setAttribute('data-theme', theme);
     }
   }
 
@@ -1381,7 +1393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await (window.ytcvI18nReady || Promise.resolve());
     applyStaticI18n();
-    enforceLightTheme();
+    applyStoredTheme();
     state.user = await window.initAuth();
     const authStatus = window.ytcvLoginPage ? window.ytcvLoginPage.checkAuthStatusParam() : null;
 
@@ -1396,7 +1408,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    enforceLightTheme();
+    applyStoredTheme();
     hideLogin();
     if (window.ytcvLoginPage && typeof window.ytcvLoginPage.releaseAuthGate === 'function') {
       window.ytcvLoginPage.releaseAuthGate();
@@ -1531,7 +1543,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.location.assign('/');
       return;
     }
-    enforceLightTheme();
+    applyStoredTheme();
     hideLogin();
     startSummaryPolling();
     await refresh();
@@ -1550,7 +1562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  enforceLightTheme();
+  applyStoredTheme();
   setLogsLiveState(true);
   await bootstrapPage();
 });

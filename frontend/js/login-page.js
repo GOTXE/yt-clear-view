@@ -185,7 +185,28 @@
         <p class="login-page__masthead-title">YT CLEAR VIEW</p>
       </header>
 
-      <div class="login-page__card">
+      <div class="login-page__body">
+        <div class="login-page__pitch" aria-hidden="true">
+          <p class="login-page__pitch-eyebrow" data-i18n="loginPitchEyebrow">YT Clear View</p>
+          <h2 class="login-page__pitch-title" data-i18n="loginPitchTitle">Your subscriptions, actually organized.</h2>
+          <p class="login-page__pitch-lead" data-i18n="loginPitchLead">A calmer way to keep up with the channels you follow — grouped, filtered, and free of noise.</p>
+          <ul class="login-page__pitch-features">
+            <li>
+              <span class="login-page__pitch-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+              <span data-i18n="loginPitchFeature1">Group channels into your own categories</span>
+            </li>
+            <li>
+              <span class="login-page__pitch-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></span>
+              <span data-i18n="loginPitchFeature2">Filter out Shorts everywhere, not just per search</span>
+            </li>
+            <li>
+              <span class="login-page__pitch-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <span data-i18n="loginPitchFeature3">See what's new at a glance, then move on</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="login-page__card">
         <div class="login-page__brand">
           <h1 class="heading-1 login-page__app-name">YT Clear View</h1>
         </div>
@@ -442,6 +463,7 @@
               <span id="password-change-submit-label" data-i18n="passwordChangeRequiredSubmit">Update password</span>
             </button>
           </form>
+        </div>
         </div>
       </div>
 

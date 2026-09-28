@@ -6,6 +6,7 @@ from datetime import timedelta
 from flask import Blueprint, g, jsonify, request
 from sqlalchemy import or_
 
+from app.config import Config
 from app.extensions import db
 from app.logging.logger import get_logger
 from app.logging.tracking import generate_tracking_id
@@ -150,9 +151,9 @@ def _parse_bool(value):
 def _apply_video_filters(query, user_id, content_type, since_days, older_than_days, only_unwatched):
     """Apply content type, age, and watched filters to the video query."""
     if content_type == "short":
-        query = query.filter(Video.duration <= 60)
+        query = query.filter(Video.duration <= Config.SHORTS_MAX_DURATION_SECONDS)
     elif content_type == "video":
-        query = query.filter(or_(Video.duration.is_(None), Video.duration > 60))
+        query = query.filter(or_(Video.duration.is_(None), Video.duration > Config.SHORTS_MAX_DURATION_SECONDS))
 
     if since_days:
         cutoff = utc_now() - timedelta(days=since_days)
@@ -353,8 +354,8 @@ def video_summary():
         only_unwatched=True,
     )
 
-    videos_count = base_query.filter(or_(Video.duration.is_(None), Video.duration > 60)).count()
-    shorts_count = base_query.filter(Video.duration <= 60).count()
+    videos_count = base_query.filter(or_(Video.duration.is_(None), Video.duration > Config.SHORTS_MAX_DURATION_SECONDS)).count()
+    shorts_count = base_query.filter(Video.duration <= Config.SHORTS_MAX_DURATION_SECONDS).count()
     return jsonify({"videos": videos_count, "shorts": shorts_count, "days": days})
 
 
@@ -565,9 +566,9 @@ def list_watched_videos():
     if channel_id is not None:
         query = query.filter(Video.channel_id == channel_id)
     if content_type == "short":
-        query = query.filter(Video.duration <= 60)
+        query = query.filter(Video.duration <= Config.SHORTS_MAX_DURATION_SECONDS)
     elif content_type == "video":
-        query = query.filter(or_(Video.duration.is_(None), Video.duration > 60))
+        query = query.filter(or_(Video.duration.is_(None), Video.duration > Config.SHORTS_MAX_DURATION_SECONDS))
 
     watched_query = (
         query.order_by(WatchedVideo.watched_at.desc())

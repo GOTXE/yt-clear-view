@@ -26,6 +26,8 @@
   "clearChannelSearch": "Limpiar busqueda de canales",
   "unwatched": "No vistos",
   "lastMonth": "Ultimo mes",
+  "hideShorts": "Ocultar Shorts",
+  "hideShortsHint": "Oculta los Shorts en toda la app, incluidos los antiguos",
   "refresh": "Actualizar videos",
   "continueWatching": "Seguir viendo",
   "showContinueWatching": "Mostrar seguir viendo",
@@ -586,6 +588,13 @@
   "loginRegisterLink": "Crear con Google",
   "loginFailed": "Usuario o contrasena incorrectos.",
   "loginLocked": "Cuenta bloqueada temporalmente. Intentalo mas tarde.",
+
+  "loginPitchEyebrow": "YT Clear View",
+  "loginPitchTitle": "Tus suscripciones, por fin organizadas.",
+  "loginPitchLead": "Una forma mas tranquila de seguir tus canales: agrupados, filtrados y sin ruido.",
+  "loginPitchFeature1": "Agrupa canales en tus propias categorias",
+  "loginPitchFeature2": "Oculta los Shorts en toda la app, no solo por busqueda",
+  "loginPitchFeature3": "Ve lo nuevo de un vistazo y sigue adelante",
 
   "registerTitle": "Crear cuenta",
   "registerUsername": "Usuario",

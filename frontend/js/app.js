@@ -115,7 +115,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     prefetchedThumbnails: new Set(),
     filters: {
       unwatched: false,
-      month: false
+      month: false,
+      hideShorts: false
     },
     carousels: [],
     searchActive: false,
@@ -262,6 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateAvailableBanner: document.getElementById('update-available-banner'),
     lastUpdatedLabel: document.getElementById('last-updated'),
     channelList: document.getElementById('channel-list'),
+    channelCategoryLegend: document.getElementById('channel-category-legend'),
     channelCount: document.getElementById('channel-count'),
     channelSearchLabel: document.getElementById('channel-search-label'),
     channelSearchInput: document.getElementById('channel-search-input'),
@@ -273,6 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchInput: document.getElementById('search-input'),
     filterUnwatched: document.getElementById('filter-unwatched'),
     filterMonth: document.getElementById('filter-month'),
+    filterHideShorts: document.getElementById('filter-hide-shorts'),
     githubLabel: document.getElementById('github-label'),
     footerUpdateLink: document.getElementById('footer-update-link'),
     sessionInfo: document.querySelector('.session-info'),
@@ -611,6 +614,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (ui.filterMonth) {
       ui.filterMonth.textContent = t('lastMonth');
+    }
+    if (ui.filterHideShorts) {
+      ui.filterHideShorts.textContent = t('hideShorts');
+      ui.filterHideShorts.title = t('hideShortsHint');
     }
     if (ui.filterPanelClear) {
       ui.filterPanelClear.textContent = t('clear');
@@ -1490,9 +1497,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function renderPrimaryLoadingStates() {
     renderSectionLoadingState(ui.latestCarousel, 'loadingVideos');
-    if (ui.shortsSection) {
-      ui.shortsSection.hidden = false;
-    }
+    updateShortsSectionVisibility();
     renderSectionLoadingState(ui.shortsCarousel, 'loadingShorts');
     if (ui.olderSection) {
       ui.olderSection.hidden = false;
@@ -1543,6 +1548,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     return configuredBase ? `${configuredBase}${media.url}` : media.url;
   }
 
+  // Small inline icons for the header KPI metrics. Kept as plain SVG strings
+  // (stroke="currentColor") so each one picks up the per-metric color set in
+  // main.css via `.header-context__metric[data-metric-key="..."]`, matching
+  // the palette already used by mode-tv.css for the same four metrics.
+  const HEADER_METRIC_ICONS = {
+    subscriptions: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    unwatched: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>',
+    recent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    updated: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>',
+    unclassified: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>'
+  };
+
+  function appendHeaderMetricIcon(title, key) {
+    const markup = HEADER_METRIC_ICONS[key];
+    if (!markup) {
+      return;
+    }
+    const icon = document.createElement('span');
+    icon.className = 'header-context__metric-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = markup;
+    title.insertBefore(icon, title.firstChild);
+  }
+
   function updateHeaderContext() {
     if (!ui.headerContext || typeof window.buildHeaderContext !== 'function') {
       return;
@@ -1569,16 +1598,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (ui.headerContextMetrics) {
         ui.headerContextMetrics.innerHTML = '';
         [
-          { label: t('headerMetricSubscriptions'), value: String(channelsInCategory.length) },
+          { key: 'subscriptions', label: t('headerMetricSubscriptions'), value: String(channelsInCategory.length) },
           {
+            key: 'unwatched',
             label: t('headerMetricUnwatched'),
             value: String(channelsInCategory.reduce((sum, channel) => sum + Number(channel.unwatched_total || 0), 0))
           },
           {
+            key: 'recent',
             label: t('headerMetricRecent'),
             value: String(channelsInCategory.reduce((sum, channel) => sum + Number(channel.recent_total_30 || 0), 0))
           },
           {
+            key: 'updated',
             label: t('headerMetricUpdated'),
             value: latest && typeof window.timeAgo === 'function'
               ? window.timeAgo(latest.toISOString())
@@ -1589,8 +1621,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         ].forEach(metric => {
           const wrapper = document.createElement('div');
           wrapper.className = 'header-context__metric';
+          if (metric && metric.key) {
+            wrapper.dataset.metricKey = metric.key;
+          }
           const title = document.createElement('dt');
           title.textContent = metric.label || '';
+          appendHeaderMetricIcon(title, metric.key);
           const value = document.createElement('dd');
           value.textContent = metric.value || '';
           wrapper.appendChild(title);
@@ -1635,6 +1671,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const title = document.createElement('dt');
         title.textContent = metric.label || '';
+        appendHeaderMetricIcon(title, metric && metric.key);
 
         const value = document.createElement('dd');
         let metricValue = metric.value || '';
@@ -1993,6 +2030,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return false;
       }
 
+      if (state.filters.hideShorts) {
+        const duration = item.video && item.video.duration;
+        // Keep in sync with backend Config.SHORTS_MAX_DURATION_SECONDS.
+        if (typeof duration === 'number' && duration <= 180) {
+          return false;
+        }
+      }
+
       if (state.selectedChannelId !== null || state.selectedChannelYtId) {
         const channelId = item.channel && item.channel.id
           ? item.channel.id
@@ -2133,8 +2178,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.carousels.push(carousel);
   }
 
+  function updateShortsSectionVisibility() {
+    if (ui.shortsSection) {
+      ui.shortsSection.hidden = state.filters.hideShorts;
+    }
+  }
+
   async function renderShortsCarousel() {
     if (!ui.shortsCarousel) {
+      return;
+    }
+
+    updateShortsSectionVisibility();
+    if (state.filters.hideShorts) {
+      // "Ocultar Shorts" is on: skip the fetch entirely and leave the
+      // section hidden and empty instead of just hiding it visually.
+      ui.shortsCarousel.innerHTML = '';
       return;
     }
 
@@ -2158,7 +2217,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, {
       showTitle: false,
       showDescription: false,
-      preserveContentOnInit: true
+      preserveContentOnInit: true,
+      shortsLayout: true
     });
 
     await carousel.init();
@@ -2177,6 +2237,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         randomize: true,
         only_unwatched: state.selectedChannelId === null && !state.selectedChannelYtId
       };
+      if (state.filters.hideShorts) {
+        // Ask the backend to exclude Shorts from this otherwise-mixed
+        // "older" bucket instead of just hiding the dedicated Shorts carousel.
+        params.content_type = 'video';
+      }
       if (state.selectedChannelId !== null) {
         params.channel_id = state.selectedChannelId;
       }
@@ -2205,6 +2270,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let totalCount = 0;
     const carousel = new window.Carousel('watched-carousel', async (offset, limit) => {
       const params = {};
+      if (state.filters.hideShorts) {
+        params.content_type = 'video';
+      }
       if (state.selectedChannelId !== null) {
         params.channel_id = state.selectedChannelId;
       }
@@ -2278,6 +2346,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateOptionalCarouselButtons();
   }
 
+  // Small colored chip row above the channel list showing which automatic
+  // categories are actually in use, so the per-channel color dots are
+  // legible at a glance instead of only on hover (badge titles).
+  function renderChannelCategoryLegend(channels) {
+    if (!ui.channelCategoryLegend) {
+      return;
+    }
+
+    const byId = new Map();
+    (channels || []).forEach(channel => {
+      const category = channel.category && channel.category.category;
+      if (!category || category.id == null) {
+        return;
+      }
+      if (!byId.has(category.id)) {
+        byId.set(category.id, category);
+      }
+    });
+
+    ui.channelCategoryLegend.innerHTML = '';
+
+    if (!byId.size || typeof window.CategorySelector !== 'function') {
+      ui.channelCategoryLegend.hidden = true;
+      return;
+    }
+
+    const selector = new window.CategorySelector(null, null);
+    const entries = Array.from(byId.values()).sort((a, b) => {
+      const nameA = a.display_name_es || a.name || '';
+      const nameB = b.display_name_es || b.name || '';
+      return nameA.localeCompare(nameB);
+    });
+
+    entries.forEach(category => {
+      const chip = document.createElement('span');
+      chip.className = `channel-category-legend__item category-badge ${selector.getCategoryColorClass(category.name)}`;
+      chip.setAttribute('role', 'listitem');
+      chip.title = category.display_name_es || category.name;
+      chip.innerHTML = `
+        <span class="category-badge__icon">${category.icon || ''}</span>
+        <span class="channel-category-legend__label">${category.display_name_es || category.name || ''}</span>
+      `;
+      ui.channelCategoryLegend.appendChild(chip);
+    });
+
+    ui.channelCategoryLegend.hidden = false;
+  }
+
   function renderChannelList(channels) {
     if (!ui.channelList) {
       return;
@@ -2285,6 +2401,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     ui.channelList.innerHTML = '';
     syncChannelSearchUI();
+    renderChannelCategoryLegend(channels);
 
     const allItem = document.createElement('div');
     allItem.className = 'channel-item';
@@ -2863,9 +2980,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.initialContentReady = true;
 
     deferredTask(async () => {
-      if (ui.shortsSection) {
-        ui.shortsSection.hidden = false;
-      }
       await renderShortsCarousel();
 
       if (ui.olderSection) {
@@ -3051,6 +3165,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.filterMonth.classList.toggle('is-active', state.filters.month);
         ui.filterMonth.setAttribute('aria-pressed', state.filters.month ? 'true' : 'false');
       }
+      if (ui.filterHideShorts) {
+        ui.filterHideShorts.classList.toggle('is-active', state.filters.hideShorts);
+        ui.filterHideShorts.setAttribute('aria-pressed', state.filters.hideShorts ? 'true' : 'false');
+      }
     };
 
     const applyFiltersNow = () => {
@@ -3082,6 +3200,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           state.filters.unwatched = false;
         }
         updateButtons();
+        applyFiltersNow();
+      });
+    }
+
+    if (ui.filterHideShorts) {
+      ui.filterHideShorts.addEventListener('click', () => {
+        state.filters.hideShorts = !state.filters.hideShorts;
+        updateButtons();
+        updateShortsSectionVisibility();
         applyFiltersNow();
       });
     }
@@ -3427,6 +3554,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ui.filterPanelClear.addEventListener('click', () => {
         state.filters.unwatched = false;
         state.filters.month = false;
+        state.filters.hideShorts = false;
         if (ui.filterUnwatched) {
           ui.filterUnwatched.classList.remove('is-active');
           ui.filterUnwatched.setAttribute('aria-pressed', 'false');
@@ -3434,6 +3562,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (ui.filterMonth) {
           ui.filterMonth.classList.remove('is-active');
           ui.filterMonth.setAttribute('aria-pressed', 'false');
+        }
+        if (ui.filterHideShorts) {
+          ui.filterHideShorts.classList.remove('is-active');
+          ui.filterHideShorts.setAttribute('aria-pressed', 'false');
         }
         clearSearch();
       });

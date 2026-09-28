@@ -26,6 +26,8 @@
   "clearChannelSearch": "Clear channel search",
   "unwatched": "Unwatched",
   "lastMonth": "Last month",
+  "hideShorts": "Hide Shorts",
+  "hideShortsHint": "Hides Shorts everywhere, including older videos",
   "refresh": "Refresh videos",
   "continueWatching": "Continue watching",
   "showContinueWatching": "Show continue watching",
@@ -585,6 +587,13 @@
   "loginRegisterLink": "Create via Google",
   "loginFailed": "Invalid username or password.",
   "loginLocked": "Account temporarily locked. Try again later.",
+
+  "loginPitchEyebrow": "YT Clear View",
+  "loginPitchTitle": "Your subscriptions, actually organized.",
+  "loginPitchLead": "A calmer way to keep up with the channels you follow — grouped, filtered, and free of noise.",
+  "loginPitchFeature1": "Group channels into your own categories",
+  "loginPitchFeature2": "Filter out Shorts everywhere, not just per search",
+  "loginPitchFeature3": "See what's new at a glance, then move on",
 
   "registerTitle": "Create account",
   "registerUsername": "Username",
