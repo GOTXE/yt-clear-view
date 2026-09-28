@@ -994,9 +994,11 @@ select {
   font-size: clamp(1.15rem, 1.6vw, 1.45rem);
 }
 
-/* Legend of the automatic categories actually present among the user's
-   channels, so the colored dots on each channel row (.category-badge) are
-   legible at a glance rather than only via hover tooltip. */
+/* Quick category filters above the channel list: one chip per automatic
+   category actually present among the user's channels. Clicking a chip
+   narrows the sidebar list to that category (click it again to clear),
+   so besides making the per-channel color badges legible at a glance,
+   the row doubles as a real filter bar instead of a passive legend. */
 .channel-category-legend {
   display: flex;
   flex-wrap: wrap;
@@ -1014,13 +1016,26 @@ select {
   border-radius: 100px;
   padding: 3px 8px 3px 6px;
   gap: 5px;
-  cursor: default;
   font-size: 0.72rem;
   font-weight: 600;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
 .channel-category-legend__item.category-badge:hover {
   transform: none;
+  filter: brightness(1.08);
+}
+
+.channel-category-legend__item.is-active {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px currentColor;
+}
+
+.channel-category-legend__item--dimmed {
+  opacity: 0.4;
+}
+
+.channel-category-legend__item--dimmed:hover {
+  opacity: 0.75;
 }
 
 .channel-category-legend__label {

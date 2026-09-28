@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchActive: false,
     searchQuery: '',
     channelFilterQuery: '',
+    channelCategoryFilterId: null,
     autoImportAttempted: false,
     autoRefreshAttempted: false,
     unclassifiedMetric: {
@@ -2346,9 +2347,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateOptionalCarouselButtons();
   }
 
-  // Small colored chip row above the channel list showing which automatic
-  // categories are actually in use, so the per-channel color dots are
-  // legible at a glance instead of only on hover (badge titles).
+  // Colored chip row above the channel list, one per automatic category
+  // actually in use. Doubles as a quick filter: clicking a chip narrows the
+  // sidebar's channel list to that category (click again, or the same
+  // category's chip, to clear it) instead of being a passive color legend.
   function renderChannelCategoryLegend(channels) {
     if (!ui.channelCategoryLegend) {
       return;
@@ -2367,6 +2369,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     ui.channelCategoryLegend.innerHTML = '';
 
+    // The active filter only makes sense while its category is still
+    // present among the channels being shown; otherwise clear it.
+    if (state.channelCategoryFilterId != null && !byId.has(state.channelCategoryFilterId)) {
+      state.channelCategoryFilterId = null;
+    }
+
     if (!byId.size || typeof window.CategorySelector !== 'function') {
       ui.channelCategoryLegend.hidden = true;
       return;
@@ -2379,15 +2387,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       return nameA.localeCompare(nameB);
     });
 
+    const hasActiveFilter = state.channelCategoryFilterId != null;
+
     entries.forEach(category => {
-      const chip = document.createElement('span');
+      const isActive = state.channelCategoryFilterId === category.id;
+      const chip = document.createElement('button');
+      chip.type = 'button';
       chip.className = `channel-category-legend__item category-badge ${selector.getCategoryColorClass(category.name)}`;
-      chip.setAttribute('role', 'listitem');
+      chip.classList.toggle('is-active', isActive);
+      chip.classList.toggle('channel-category-legend__item--dimmed', hasActiveFilter && !isActive);
+      chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       chip.title = category.display_name_es || category.name;
       chip.innerHTML = `
         <span class="category-badge__icon">${category.icon || ''}</span>
         <span class="channel-category-legend__label">${category.display_name_es || category.name || ''}</span>
       `;
+      chip.addEventListener('click', () => {
+        state.channelCategoryFilterId = state.channelCategoryFilterId === category.id ? null : category.id;
+        renderChannelList(state.channels);
+      });
       ui.channelCategoryLegend.appendChild(chip);
     });
 
@@ -2421,6 +2439,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const channelMatchesFilters = channel => {
+      if (state.channelCategoryFilterId != null) {
+        const category = channel.category && channel.category.category;
+        if (!category || category.id !== state.channelCategoryFilterId) {
+          return false;
+        }
+      }
+
       const monthFilter = state.filters.month;
       const unwatchedFilter = state.filters.unwatched;
 
