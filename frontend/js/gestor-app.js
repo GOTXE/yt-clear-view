@@ -1074,11 +1074,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function syncLogsLivePolling() {
     stopLogsLivePolling();
-    if (!state.logs.live) {
+    if (!state.logs.live || !state.user) {
       return;
     }
     state.logs.liveTimer = window.setInterval(async () => {
-      if (!state.logs.live) {
+      if (!state.logs.live || !state.user) {
         stopLogsLivePolling();
         return;
       }
@@ -1258,6 +1258,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function fetchLogs({ append = false } = {}) {
+    if (!state.user) {
+      return;
+    }
     const params = {
       limit: 200,
       offset: append ? state.logs.nextOffset || 0 : 0,
@@ -1368,6 +1371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.videoRefreshMode = videoRefreshModeResponse.data || {};
     renderAll();
     startSummaryPolling();
+    syncLogsLivePolling();
     setStatus('');
     if (state.logs.live) {
       await fetchLogs();
@@ -1398,6 +1402,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const authStatus = window.ytcvLoginPage ? window.ytcvLoginPage.checkAuthStatusParam() : null;
 
     if (!state.user) {
+      stopLogsLivePolling();
       const options = authStatus === 'needs_setup' ? { wizard: true } : {};
       showLogin(options);
       return;
@@ -1424,6 +1429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     button.addEventListener('click', async () => {
       button.disabled = true;
       stopSummaryPolling();
+      stopLogsLivePolling();
       await api.adminLogout();
       window.location.assign('/gestor/');
     });
@@ -1536,6 +1542,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.user = user;
     if (!user) {
       stopSummaryPolling();
+      stopLogsLivePolling();
       showLogin();
       return;
     }
@@ -1551,6 +1558,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.addEventListener('auth-required', () => {
     stopSummaryPolling();
+    stopLogsLivePolling();
     showLogin();
   });
 
