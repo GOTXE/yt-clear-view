@@ -3,8 +3,7 @@
 ---
 
 <p align="center">
-release/v0.13.0-beta.5
-  <a href="https://github.com/gotxe/youtube-clear-view/releases/tag/v0.13.0-beta.5"><img src="https://img.shields.io/badge/release-v0.13.0--beta.5-005AA4?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/GOTXE/yt-clear-view/releases/tag/v0.13.0"><img src="https://img.shields.io/badge/release-v0.13.0-005AA4?style=for-the-badge" alt="Release"></a>
   <a href="#usage"><img src="https://img.shields.io/badge/runtime-docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2E7D32?style=for-the-badge" alt="License"></a>
 </p>
@@ -114,14 +113,13 @@ services:
 ```
 
 Release and images:
-release/v0.13.0-beta.5
-- Release: `v0.13.0-beta.5` -> <https://github.com/gotxe/youtube-clear-view/releases/tag/v0.13.0-beta.5>
-- Backend image: <https://github.com/gotxe/youtube-clear-view/pkgs/container/ytcv-backend>
-- Proxy image: <https://github.com/gotxe/youtube-clear-view/pkgs/container/ytcv-proxy>
+- Release: `v0.13.0` -> <https://github.com/GOTXE/yt-clear-view/releases/tag/v0.13.0>
+- Backend image: <https://github.com/GOTXE/yt-clear-view/pkgs/container/ytcv-backend>
+- Proxy image: <https://github.com/GOTXE/yt-clear-view/pkgs/container/ytcv-proxy>
 - Pull example:
 ```bash
-docker pull ghcr.io/gotxe/ytcv-backend:v0.13.0-beta.5
-docker pull ghcr.io/gotxe/ytcv-proxy:v0.13.0-beta.5
+docker pull ghcr.io/gotxe/ytcv-backend:v0.13.0
+docker pull ghcr.io/gotxe/ytcv-proxy:v0.13.0
 ```
 
 ### 1) Prepare Google Cloud (quick searches)
@@ -217,19 +215,19 @@ The stack runs:
 Example if you use the repo (`infra/compose/compose.yaml`):
 
 ```bash
-YTCV_TAG=v0.13.0-beta.5 docker compose -f infra/compose/compose.yaml up -d
+YTCV_TAG=v0.13.0 docker compose -f infra/compose/compose.yaml up -d
 ```
 
 You can customize startup with variables:
 
-- `YTCV_TAG`: image version (`v0.13.0-beta.5`, `latest`, etc.).
+- `YTCV_TAG`: image version (`v0.13.0`, `latest`, etc.).
 - `YTCV_HTTP_PORT`: public port (default `8080`).
 
 Examples:
 
 ```bash
 # Port 8090
-YTCV_TAG=v0.13.0-beta.5 YTCV_HTTP_PORT=8090 docker compose -f infra/compose/compose.yaml up -d
+YTCV_TAG=v0.13.0 YTCV_HTTP_PORT=8090 docker compose -f infra/compose/compose.yaml up -d
 ```
 
 Basic equivalent compose example (if you want your own):
@@ -317,11 +315,11 @@ docker compose -f infra/compose/compose.yaml -f infra/compose/compose.dev.yaml u
 
 ```bash
 # Change public port
-YTCV_HTTP_PORT=8081 YTCV_TAG=v0.13.0-beta.5 docker compose -f infra/compose/compose.yaml up -d
+YTCV_HTTP_PORT=8081 YTCV_TAG=v0.13.0 docker compose -f infra/compose/compose.yaml up -d
 
 # Update standard install
-YTCV_TAG=v0.13.0-beta.5 docker compose -f infra/compose/compose.yaml pull
-YTCV_TAG=v0.13.0-beta.5 docker compose -f infra/compose/compose.yaml up -d
+YTCV_TAG=v0.13.0 docker compose -f infra/compose/compose.yaml pull
+YTCV_TAG=v0.13.0 docker compose -f infra/compose/compose.yaml up -d
 
 # Rebuild proxy only (frontend)
 ./scripts/dev_docker.sh up --mode dev --build proxy
@@ -357,6 +355,13 @@ Important:
   - change `YTCV_HTTP_PORT`.
 - Backend is “healthy” but you cannot log in:
   - check `AUTH_MODE=google`, OAuth credentials, and consistency between `FRONTEND_URL` and `CORS_ORIGINS`. Also make sure you completed admin user setup and local DB user login (created after first Google login).
+- Locked out after failed logins (`423` error):
+  - after 5 failed password attempts an account is locked for 15 minutes. Wait it out, or restart the backend to lift the lock sooner.
+- Forgot the admin/gestor password:
+  - set `ADMIN_RESET_PASSWORD=true` in `backend/.env`, restart the backend, and check the backend logs — a new temporary password is generated for every admin account and printed there (you must change it on next login). Remove the variable and restart again once you are back in.
+  - if you need to demote/disable all existing admins instead and go through the bootstrap wizard again, use `ADMIN_FORCE_RESET=true` (destructive: it disables all current admin accounts).
+- Forgot a normal user's password:
+  - an admin can set a temporary password for that user from the admin panel (`Gestor` → users → reset password). If no admin account is reachable, use the admin password reset above first.
 
 ## Documentation
 
@@ -374,7 +379,7 @@ If you find anything weird or have questions, open an issue :paperclip:
 Bug? :bug: Improvement idea? :bulb:
 
 - Open a GitHub issue.
-- Include version (`v0.13.0-beta.5` or tag), environment, and reproduction steps.
+- Include version (`v0.13.0` or tag), environment, and reproduction steps.
 
 ## Legal notice
 
