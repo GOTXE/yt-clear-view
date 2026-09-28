@@ -3,7 +3,7 @@
 ---
 
 <p align="center">
-  <a href="https://github.com/gotxe/youtube-clear-view/releases/tag/v0.13.0-beta.4"><img src="https://img.shields.io/badge/release-v0.13.0--beta.4-005AA4?style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/GOTXE/yt-clear-view/releases/tag/v0.13.0"><img src="https://img.shields.io/badge/release-v0.13.0-005AA4?style=for-the-badge" alt="Release"></a>
   <a href="#uso"><img src="https://img.shields.io/badge/runtime-docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2E7D32?style=for-the-badge" alt="License"></a>
 </p>
@@ -113,13 +113,13 @@ services:
 ```
 
 Release e imágenes:
-- Release: `v0.13.0-beta.4` -> <https://github.com/gotxe/youtube-clear-view/releases/tag/v0.13.0-beta.4>
-- Imagen backend: <https://github.com/gotxe/youtube-clear-view/pkgs/container/ytcv-backend>
-- Imagen proxy: <https://github.com/gotxe/youtube-clear-view/pkgs/container/ytcv-proxy>
+- Release: `v0.13.0` -> <https://github.com/GOTXE/yt-clear-view/releases/tag/v0.13.0>
+- Imagen backend: <https://github.com/GOTXE/yt-clear-view/pkgs/container/ytcv-backend>
+- Imagen proxy: <https://github.com/GOTXE/yt-clear-view/pkgs/container/ytcv-proxy>
 - Ejemplo de pull:
 ```bash
-docker pull ghcr.io/gotxe/ytcv-backend:v0.13.0-beta.4
-docker pull ghcr.io/gotxe/ytcv-proxy:v0.13.0-beta.4
+docker pull ghcr.io/gotxe/ytcv-backend:v0.13.0
+docker pull ghcr.io/gotxe/ytcv-proxy:v0.13.0
 ```
 
 ### 1) Prepara Google Cloud (búsquedas rápidas)
@@ -215,19 +215,19 @@ El stack levanta:
 Ejemplo si usas el repo (`infra/compose/compose.yaml`):
 
 ```bash
-YTCV_TAG=v0.13.0-beta.4 docker compose -f infra/compose/compose.yaml up -d
+YTCV_TAG=v0.13.0 docker compose -f infra/compose/compose.yaml up -d
 ```
 
 Puedes personalizar ese arranque con variables:
 
-- `YTCV_TAG`: versión de imágenes (`v0.13.0-beta.4`, `latest`, etc.).
+- `YTCV_TAG`: versión de imágenes (`v0.13.0`, `latest`, etc.).
 - `YTCV_HTTP_PORT`: puerto público (por defecto `8080`).
 
 Ejemplos:
 
 ```bash
 # Puerto 8090
-YTCV_TAG=v0.13.0-beta.4 YTCV_HTTP_PORT=8090 docker compose -f infra/compose/compose.yaml up -d
+YTCV_TAG=v0.13.0 YTCV_HTTP_PORT=8090 docker compose -f infra/compose/compose.yaml up -d
 ```
 
 Ejemplo de compose básico equivalente (si quieres montar el tuyo):
@@ -313,11 +313,11 @@ docker compose -f infra/compose/compose.yaml -f infra/compose/compose.dev.yaml u
 
 ```bash
 # Cambiar el puerto público
-YTCV_HTTP_PORT=8081 YTCV_TAG=v0.13.0-beta.4 docker compose -f infra/compose/compose.yaml up -d
+YTCV_HTTP_PORT=8081 YTCV_TAG=v0.13.0 docker compose -f infra/compose/compose.yaml up -d
 
 # Actualizar instalación estándar
-YTCV_TAG=v0.13.0-beta.4 docker compose -f infra/compose/compose.yaml pull
-YTCV_TAG=v0.13.0-beta.4 docker compose -f infra/compose/compose.yaml up -d
+YTCV_TAG=v0.13.0 docker compose -f infra/compose/compose.yaml pull
+YTCV_TAG=v0.13.0 docker compose -f infra/compose/compose.yaml up -d
 
 # Rebuild solo del proxy (frontend)
 ./scripts/dev_docker.sh up --mode dev --build proxy
@@ -353,6 +353,13 @@ Importante:
   - cambia `YTCV_HTTP_PORT`.
 - Backend “healthy” pero no puedes logear:
   - revisa `AUTH_MODE=google`, credenciales OAuth y coherencia entre `FRONTEND_URL` y `CORS_ORIGINS`. Además de haber finalizado el proceso de crear usuario Gestor (Administrador) y el de login del usuario de la bbdd local (que se crea tras el primer login con Google).
+- Cuenta bloqueada tras varios intentos fallidos (error `423`):
+  - tras 5 intentos fallidos la cuenta se bloquea 15 minutos. Espera ese tiempo, o reinicia el backend para levantar el bloqueo antes.
+- Has olvidado la contraseña del admin/gestor:
+  - pon `ADMIN_RESET_PASSWORD=true` en `backend/.env`, reinicia el backend y mira los logs del backend — se genera una contraseña temporal nueva para cada cuenta admin y se imprime ahí (tendrás que cambiarla en el próximo login). Quita la variable y reinicia otra vez cuando ya hayas entrado.
+  - si en cambio necesitas degradar/deshabilitar todos los admins actuales y volver a pasar por el asistente de bootstrap, usa `ADMIN_FORCE_RESET=true` (destructivo: deshabilita todas las cuentas admin actuales).
+- Un usuario normal ha olvidado su contraseña:
+  - un admin puede ponerle una contraseña temporal desde el panel de administración (`Gestor` → usuarios → resetear contraseña). Si no hay ninguna cuenta admin accesible, usa primero el reseteo de admin de arriba.
 
 ## Documentación
 
@@ -370,7 +377,7 @@ Si encuentras algo raro o tienes dudas, abre un issue :paperclip:
 ¿Bug? :bug: ¿Idea de mejora? :bulb:
 
 - Abre un issue en GitHub.
-- Incluye versión (`v0.13.0-beta.4` o tag), entorno y pasos para reproducir.
+- Incluye versión (`v0.13.0` o tag), entorno y pasos para reproducir.
 
 ## Aviso legal
 

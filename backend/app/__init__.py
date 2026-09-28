@@ -29,6 +29,7 @@ from .migrations import (
 )
 from .routes import register_routes
 from .services.admin_bootstrap import (
+    apply_admin_password_reset_if_requested,
     apply_admin_recovery_if_requested,
     is_bootstrap_required,
     reset_bootstrap_window,
@@ -99,6 +100,7 @@ def create_app(config_class=Config):
         ensure_channel_classification_columns()
         ensure_user_channel_rating_columns()
         apply_admin_recovery_if_requested()
+        apply_admin_password_reset_if_requested()
         if is_bootstrap_required():
             reset_bootstrap_window()
         recover_interrupted_refresh_jobs()

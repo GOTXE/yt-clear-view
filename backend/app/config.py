@@ -40,6 +40,7 @@ class Config:
     ADMIN_BOOTSTRAP_PASSWORD = os.getenv("ADMIN_BOOTSTRAP_PASSWORD", "")
     ADMIN_BOOTSTRAP_DISPLAY_NAME = os.getenv("ADMIN_BOOTSTRAP_DISPLAY_NAME", "")
     ADMIN_FORCE_RESET = os.getenv("ADMIN_FORCE_RESET", "false").lower() == "true"
+    ADMIN_RESET_PASSWORD = os.getenv("ADMIN_RESET_PASSWORD", "false").lower() == "true"
     BOOTSTRAP_TIMEOUT_SECONDS = int(os.getenv("BOOTSTRAP_TIMEOUT_SECONDS", "300"))
     SQLITE_METRICS_ENABLED = os.getenv("SQLITE_METRICS_ENABLED", "false").lower() == "true"
     SQLITE_METRICS_SLOW_WRITE_MS = int(os.getenv("SQLITE_METRICS_SLOW_WRITE_MS", "100"))
